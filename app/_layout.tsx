@@ -13,23 +13,23 @@ export default function RootLayout() {
           headerTitleAlign: 'center',
         }}
       >
-        <Tabs.Screen 
-          name="index" 
-          options={{ 
-            title: 'PurrView',
-            tabBarLabel: 'Feed',
-            tabBarIcon: ({ color }) => <Home color={color} size={24} />
-          }} 
-        />
-        <Tabs.Screen 
-          name="upload" 
-          options={{ 
-            title: 'Upload Cat',
-            tabBarLabel: 'Upload',
-            tabBarIcon: ({ color }) => <UploadCloud color={color} size={24} />
-          }} 
-        />
-      </Tabs>
+            <Tabs.Screen 
+                name="index" 
+                options={{ 
+                title: 'My Uploaded Cats',
+                tabBarLabel: 'My Cats',
+                tabBarIcon: ({ color }) => <Home color={color} size={24} />
+                }} 
+            />
+            <Tabs.Screen 
+                name="upload" 
+                options={{ 
+                title: 'Upload New Cat',
+                tabBarLabel: 'Upload',
+                tabBarIcon: ({ color }) => <UploadCloud color={color} size={24} />
+                }} 
+            />
+        </Tabs>
     </QueryClientProvider>
   );
 }

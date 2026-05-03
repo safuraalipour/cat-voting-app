@@ -1,59 +1,31 @@
 import { View, FlatList, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import { useCats } from '../src/hooks/useCats';
+import { useMyUploadedCats } from '../src/hooks/useCats';
 import { CatCard } from '../src/components/CatCard';
 
-export default function FeedScreen() {
-  const { data: catList, isLoading, isError } = useCats();
+export default function HomeScreen() {
+  const { data, isLoading } = useMyUploadedCats();
 
-  if (isLoading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#000" />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (isError) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>Error loading feed</Text>
-      </View>
-    );
-  }
+  if (isLoading) return <ActivityIndicator style={{flex: 1}} size="large" />;
 
   return (
-    <FlatList
-      data={catList}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <CatCard cat={item} />}
-      contentContainerStyle={styles.list}
-      showsVerticalScrollIndicator={false}
-      initialNumToRender={5}
-      maxToRenderPerBatch={5}
-      windowSize={5}
-    />
+    <View style={styles.container}>
+      <FlatList
+        data={data}
+        numColumns={2}
+        key={2} 
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <CatCard cat={item} />}
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={<Text style={styles.empty}>No cats yet. Upload one!</Text>}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F7F7F7',
-  },
-  list: {
-    padding: 16,
-    backgroundColor: '#F7F7F7',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#F44336',
-  }
+  container: { flex: 1, backgroundColor: '#f8f8f8' },
+  list: { padding: 8 },
+  row: { justifyContent: 'space-between', marginBottom: 8 },
+  empty: { textAlign: 'center', marginTop: 50, color: '#666' }
 });

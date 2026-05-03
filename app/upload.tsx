@@ -1,26 +1,30 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { UploadCloud, ImagePlus, X } from 'lucide-react-native';
+import { UploadCloud, ImagePlus, XCircle } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { apiClient } from '../src/api/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function UploadScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
     if (status !== 'granted') {
-      Alert.alert('Permission Required', 'You need to grant gallery access to upload a cat photo.');
+      Alert.alert('Permission Required', 'Gallery access is needed to upload photos.');
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, 
-      aspect: [4, 4], 
-      quality: 0.8, 
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
     });
 
     if (!result.canceled) {
@@ -28,49 +32,76 @@ export default function UploadScreen() {
     }
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!imageUri) return;
-
     setIsUploading(true);
 
-    setTimeout(() => {
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() || 'upload.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+    formData.append('file', {
+      uri: imageUri,
+      name: filename,
+      type: type,
+    });
+
+    try {
+      const response = await apiClient.post('/images/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        Alert.alert('Success', 'Cat uploaded successfully!');
+        queryClient.invalidateQueries({ queryKey: ['my-uploads'] });
+        router.replace('/'); 
+      }
+    } catch (error: any) {
+      console.error('Upload Error Details:', error.response?.data || error.message);
+      const apiMessage = error.response?.data?.message || 'Check your API Key or Network.';
+      Alert.alert('Upload Failed', apiMessage);
+    } finally {
       setIsUploading(false);
-      Alert.alert('Success!', 'Your cat photo was uploaded successfully!');
-      setImageUri(null); 
-    }, 2000);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Show your cat to the world!</Text>
-
-      {imageUri ? (
+      <Text style={styles.title}>Upload Your Cat</Text>
+      
+      {!imageUri ? (
+        <TouchableOpacity style={styles.picker} onPress={pickImage}>
+          <ImagePlus size={50} color="#E91E63" strokeWidth={1.5} />
+          <Text style={styles.pickerText}>Tap to select a photo</Text>
+        </TouchableOpacity>
+      ) : (
         <View style={styles.previewContainer}>
-          <Image source={imageUri} style={styles.previewImage} transition={200} />
+          <Image source={imageUri} style={styles.previewImage} />
           <TouchableOpacity 
-            style={styles.removeButton} 
+            style={styles.removeBtn} 
             onPress={() => setImageUri(null)}
+            disabled={isUploading}
           >
-            <X color="#fff" size={20} />
+            <XCircle size={32} color="#F44336" fill="white" />
           </TouchableOpacity>
         </View>
-      ) : (
-        <TouchableOpacity style={styles.pickerButton} onPress={pickImage}>
-          <ImagePlus color="#E91E63" size={48} />
-          <Text style={styles.pickerText}>Choose from Gallery</Text>
-        </TouchableOpacity>
       )}
 
       {imageUri && (
         <TouchableOpacity 
-          style={[styles.uploadButton, isUploading && styles.uploadingState]} 
+          style={[styles.button, isUploading && styles.disabled]} 
           onPress={handleUpload}
           disabled={isUploading}
         >
-          <UploadCloud color="#fff" size={24} />
-          <Text style={styles.uploadButtonText}>
-            {isUploading ? 'Uploading...' : 'Upload Photo'}
-          </Text>
+          {isUploading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <UploadCloud size={20} color="white" style={{marginRight: 8}} />
+              <Text style={styles.buttonText}>Confirm Upload</Text>
+            </>
+          )}
         </TouchableOpacity>
       )}
     </View>
@@ -78,80 +109,22 @@ export default function UploadScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    alignItems: 'center',
-    backgroundColor: '#F7F7F7',
+  container: { flex: 1, padding: 20, alignItems: 'center', backgroundColor: '#fff' },
+  title: { fontSize: 22, fontWeight: 'bold', marginVertical: 20, color: '#333' },
+  picker: { 
+    width: '100%', height: 300, borderStyle: 'dashed', borderWidth: 2, 
+    borderColor: '#E91E63', borderRadius: 20, justifyContent: 'center', 
+    alignItems: 'center', backgroundColor: '#FFF5F7' 
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 32,
-    color: '#333',
-    marginTop: 20,
+  pickerText: { marginTop: 12, color: '#E91E63', fontWeight: '600', fontSize: 16 },
+  previewContainer: { width: '100%', height: 300, position: 'relative' },
+  previewImage: { width: '100%', height: '100%', borderRadius: 20 },
+  removeBtn: { position: 'absolute', top: -10, right: -10, elevation: 5 },
+  button: { 
+    flexDirection: 'row', backgroundColor: '#E91E63', width: '100%', 
+    padding: 18, borderRadius: 15, marginTop: 40, 
+    justifyContent: 'center', alignItems: 'center' 
   },
-  pickerButton: {
-    width: '100%',
-    height: 250,
-    borderWidth: 2,
-    borderColor: '#E91E63',
-    borderStyle: 'dashed',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fce4ec',
-  },
-  pickerText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#E91E63',
-    fontWeight: '600',
-  },
-  previewContainer: {
-    width: '100%',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  previewImage: {
-    width: '100%',
-    height: 300,
-    borderRadius: 16,
-  },
-  removeButton: {
-    position: 'absolute',
-    top: -10,
-    right: -10,
-    backgroundColor: '#F44336',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  uploadButton: {
-    flexDirection: 'row',
-    backgroundColor: '#E91E63',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 30,
-    marginTop: 32,
-    alignItems: 'center',
-    width: '100%',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  uploadingState: {
-    backgroundColor: '#9E9E9E',
-  },
-  uploadButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  }
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  disabled: { backgroundColor: '#F48FB1' }
 });
