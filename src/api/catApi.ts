@@ -14,5 +14,19 @@ export const catApi = {
     apiClient.get(`/votes?image_id=${imageId}`),
     
   getFavourites: (imageId: string) => 
-    apiClient.get(`/favourites?image_id=${imageId}&sub_id=user_123`)
+    apiClient.get(`/favourites?image_id=${imageId}&sub_id=user_123`),
+    
+  uploadImage: (imageUri: string, filename: string, type: string) => {
+     const formData = new FormData();
+     
+      formData.append('file', {
+          uri: imageUri,
+          name: filename,
+          type: type,
+      });
+
+     return apiClient.post('/images/upload', formData, {
+       headers: { 'Content-Type': 'multipart/form-data' },
+     });
+   },  
 };

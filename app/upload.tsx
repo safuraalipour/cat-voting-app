@@ -6,6 +6,7 @@ import { UploadCloud, ImagePlus, XCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { apiClient } from '../src/api/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { catApi } from '../src/api/catApi';
 
 export default function UploadScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -35,27 +36,18 @@ export default function UploadScreen() {
   const handleUpload = async () => {
     if (!imageUri) return;
     setIsUploading(true);
-
-    const formData = new FormData();
+  
     const filename = imageUri.split('/').pop() || 'upload.jpg';
     const match = /\.(\w+)$/.exec(filename);
     const type = match ? `image/${match[1]}` : `image/jpeg`;
-
-    formData.append('file', {
-      uri: imageUri,
-      name: filename,
-      type: type,
-    });
-
+  
     try {
-      const response = await apiClient.post('/images/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
+      const response = await catApi.uploadImage(imageUri, filename, type);
+  
       if (response.status === 201 || response.status === 200) {
-        Alert.alert('Success', 'Cat uploaded successfully!');
+        Alert.alert('Success ', 'Cat uploaded successfully!');
         queryClient.invalidateQueries({ queryKey: ['my-uploads'] });
-        setImageUri(null);
+        setImageUri(null); 
         router.replace('/'); 
       }
     } catch (error: any) {
@@ -64,8 +56,8 @@ export default function UploadScreen() {
     } finally {
       setIsUploading(false);
     }
-  };
-
+  }
+  
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Upload Your Cat</Text>
