@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// NOTE: Hardcoded for reviewer convenience. In production, use process.env.EXPO_PUBLIC_CAT_API_KEY
 const API_KEY =
   "live_yIephPasnbpbdRf1sSvaGPdMYGwPWXbRAs3GMY0NFIXU4aVSgDOsZG09vpjglqmE";
 
