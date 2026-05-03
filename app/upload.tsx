@@ -55,10 +55,10 @@ export default function UploadScreen() {
       if (response.status === 201 || response.status === 200) {
         Alert.alert('Success', 'Cat uploaded successfully!');
         queryClient.invalidateQueries({ queryKey: ['my-uploads'] });
+        setImageUri(null);
         router.replace('/'); 
       }
     } catch (error: any) {
-      console.error('Upload Error Details:', error.response?.data || error.message);
       const apiMessage = error.response?.data?.message || 'Check your API Key or Network.';
       Alert.alert('Upload Failed', apiMessage);
     } finally {
