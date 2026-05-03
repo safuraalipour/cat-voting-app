@@ -16,7 +16,7 @@ Start the Expo development server:
 Bash
 npx expo start
 
-🛠 Tech Stack
+Tech Stack
 Framework: Expo (SDK 50+) with Expo Router.
 
 State Management: TanStack Query (React Query) for efficient server-state handling.
