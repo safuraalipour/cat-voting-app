@@ -1,32 +1,31 @@
-import { apiClient } from './client';
+import { apiClient } from "./client";
 
 export const catApi = {
-  favourite: (imageId: string) => 
-    apiClient.post('/favourites', { image_id: imageId, sub_id: 'user_123' }),
-  
-  unfavourite: (favouriteId: number) => 
+  favourite: (imageId: string) =>
+    apiClient.post("/favourites", { image_id: imageId, sub_id: "user_123" }),
+
+  unfavourite: (favouriteId: number) =>
     apiClient.delete(`/favourites/${favouriteId}`),
 
-  vote: (imageId: string, value: number) => 
-    apiClient.post('/votes', { image_id: imageId, sub_id: 'user_123', value }),
+  vote: (imageId: string, value: number) =>
+    apiClient.post("/votes", { image_id: imageId, sub_id: "user_123", value }),
 
-  getVotes: (imageId: string) => 
-    apiClient.get(`/votes?image_id=${imageId}`),
-    
-  getFavourites: (imageId: string) => 
+  getVotes: (imageId: string) => apiClient.get(`/votes?image_id=${imageId}`),
+
+  getFavourites: (imageId: string) =>
     apiClient.get(`/favourites?image_id=${imageId}&sub_id=user_123`),
-    
-  uploadImage: (imageUri: string, filename: string, type: string) => {
-     const formData = new FormData();
-     
-      formData.append('file', {
-          uri: imageUri,
-          name: filename,
-          type: type,
-      });
 
-     return apiClient.post('/images/upload', formData, {
-       headers: { 'Content-Type': 'multipart/form-data' },
-     });
-   },  
+  uploadImage: (imageUri: string, filename: string, type: string) => {
+    const formData = new FormData();
+
+    formData.append("file", {
+      uri: imageUri,
+      name: filename,
+      type: type,
+    });
+
+    return apiClient.post("/images/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 };
